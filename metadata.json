@@ -1,0 +1,12 @@
+{
+  "name": "LiveNova AI - Background Voice Assistant",
+  "description": "Smart Gemini Live background voice assistant that operates in browser or installed PWA app, executes instant voice commands, answers directly, and controls device actions.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera",
+    "notifications"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

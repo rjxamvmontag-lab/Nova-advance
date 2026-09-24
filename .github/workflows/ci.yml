@@ -1,0 +1,59 @@
+name: CI - Build and Test LiveNova App
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+# Cancel in-progress runs if a newer commit is pushed to the same PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Verify Applet
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci || npm install
+
+      - name: 🔍 Type Check & Lint
+        run: npm run lint
+
+      - name: 🚀 Build Production Artifacts (Vite + PWA)
+        run: npm run build
+        env:
+          NODE_ENV: production
+          VITE_CONFIG_NATIVE_IGNORE_WARNING: "true"
+
+      - name: 📤 Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-build-output
+          path: dist/
+          retention-days: 7
+
+      - name: ✅ Build Verification Summary
+        run: |
+          echo "### 🚀 LiveNova App Build Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "- **PWA Assets**: Generated and Precached" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Directory**: \`dist/\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Node Version**: ${{ matrix.node-version }}" >> $GITHUB_STEP_SUMMARY
+          ls -la dist/
